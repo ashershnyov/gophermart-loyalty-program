@@ -33,8 +33,7 @@ func NewService(db db.DB, jwtGen *jwt.Generator, accrualAddress string) *Service
 		poller, _      = poller.New(&orderService, &balanceService, accrualAddress)
 	)
 
-	errChan := make(chan error)
-	go poller.PollerLoop(context.Background(), errChan)
+	go poller.PollerLoop(context.Background())
 
 	return &Service{
 		orders:  &orderService,
