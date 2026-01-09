@@ -77,7 +77,7 @@ func (h *Handler) addOrder() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		orderNumber := string(buf.Bytes())
+		orderNumber := buf.String()
 
 		_, err = h.os.GetSingleOrder(r.Context(), orderNumber, userID)
 		if errors.Is(err, service.ErrInvalidOrderNumber) {
