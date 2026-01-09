@@ -44,7 +44,7 @@ func New(os orderService, bs balanceService, address string) (*Poller, error) {
 
 // accrualRequest makes a single accrual service request.
 func (p *Poller) accrualRequest(number string) (*model.AccrualOrder, error) {
-	req, err := http.NewRequest("GET", p.cfg.Address+number, nil)
+	req, err := http.NewRequest("GET", p.cfg.Address+"/"+number, nil)
 	slog.Info("request to" + p.cfg.Address + number)
 	if err != nil {
 		slog.Warn(err.Error())
