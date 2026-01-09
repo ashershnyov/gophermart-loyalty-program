@@ -3,7 +3,7 @@
 CREATE TABLE gophermart.balance (
     user_id BIGSERIAL NOT NULL REFERENCES gophermart.users(id) ON DELETE CASCADE,
     updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    current NUMERIC(10, 2) NOT NULL DEFAULT 0.0,
+    "current" NUMERIC(10, 2) NOT NULL DEFAULT 0.0,
     total_withdrawn NUMERIC(10, 2) NOT NULL DEFAULT 0.0
 );
 

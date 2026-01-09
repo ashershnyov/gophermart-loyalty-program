@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/balance/model"
 	"github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/balance/storage"
@@ -69,6 +70,7 @@ func (bs *BalanceService) Withdraw(ctx context.Context, withdrawal model.Withdra
 
 	balance, err := bs.storage.GetBalance(ctx, userID)
 	if err != nil {
+		slog.Warn(err.Error())
 		return fmt.Errorf("error getting balance: %w", err)
 	}
 	if withdrawal.Sum > balance.Current {
@@ -77,6 +79,7 @@ func (bs *BalanceService) Withdraw(ctx context.Context, withdrawal model.Withdra
 
 	err = bs.storage.Withdraw(ctx, userID, withdrawal.Order, withdrawal.Sum)
 	if err != nil {
+		slog.Warn(err.Error())
 		return fmt.Errorf("error performig withdrawal: %w", err)
 	}
 	return nil

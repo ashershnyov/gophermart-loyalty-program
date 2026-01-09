@@ -9,7 +9,7 @@ const errWithdrawing = "failed to withdraw from user's balance: %w"
 
 const (
 	qWithdrawFromBalance = `
-		UPDATE gophermart.withdrawals
+		UPDATE gophermart.balance
 		SET updated = NOW(),
 			current = current + $1,
 			total_withdrawn = total_withdrawn - $1
