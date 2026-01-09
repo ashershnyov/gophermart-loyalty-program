@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/orders/model"
@@ -103,8 +104,11 @@ func (p *Poller) startPolling(
 ) error {
 	slog.Info("polling...")
 
+	var wg sync.WaitGroup
+	wg.Add(p.cfg.WorkerNum)
 	for i := 0; i < p.cfg.WorkerNum; i++ {
 		go func() {
+			defer wg.Done()
 			p.pollWorker(ctx, ordersChan, resChan)
 		}()
 	}
@@ -114,6 +118,9 @@ func (p *Poller) startPolling(
 	for _, toPoll := range pollable {
 		ordersChan <- toPoll.Order
 	}
+
+	wg.Wait()
+	close(ordersChan)
 
 	slog.Info("processsing results...")
 	for res := range resChan {
