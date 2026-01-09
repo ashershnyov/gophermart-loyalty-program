@@ -81,8 +81,8 @@ func (p *Poller) accrualRequest(number string) (*model.AccrualOrder, error) {
 
 func (p *Poller) pollWorker(
 	ctx context.Context,
-	ordersChan <-chan string,
-	resChan chan<- *model.AccrualOrder,
+	ordersChan chan string,
+	resChan chan *model.AccrualOrder,
 ) {
 	for order := range ordersChan {
 		slog.Info("processing poll...")
