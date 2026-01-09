@@ -40,3 +40,19 @@ func (s *Storage) GetOrders(ctx context.Context, userID int64) ([]model.IntOrder
 
 	return orders, nil
 }
+
+const qGetSingleOrder = `
+	SELECT status, accrual, updated, user_id FROM gophermart.orders
+	WHERE number = $1;
+`
+
+// GetSingleOrder gets a single order by its number.
+func (s *Storage) GetSingleOrder(ctx context.Context, number string) (model.IntOrder, error) {
+	row := s.db.QueryRowContext(ctx, qGetSingleOrder, number)
+	var order = model.IntOrder{}
+	err := row.Scan(&order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
+	if err != nil {
+		return model.IntOrder{}, fmt.Errorf("an error occurred when fetching order DB %s: %w", number, err)
+	}
+	return order, nil
+}

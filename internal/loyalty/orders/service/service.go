@@ -2,16 +2,31 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/orders/model"
 	"github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/orders/storage"
 	"github.com/ashershnyov/gophermart-loyalty-program/pkg/db"
+	"github.com/ashershnyov/gophermart-loyalty-program/pkg/luhn"
+)
+
+var (
+	// ErrInvalidOrderNumber means the order number is not valid.
+	ErrInvalidOrderNumber = errors.New("invalid order number")
+	// ErrOrderAlreadyExists means the order with a certain number already exists for the specified userID.
+	ErrOrderAlreadyExists = errors.New("order already exists")
+	// ErrOrderNumberTaken means the order number is already taken.
+	ErrOrderNumberTaken = errors.New("order number taken")
+	// ErrNoOrderFound means the order was not found for the specfic number.
+	ErrNoOrderFound = errors.New("no order found")
 )
 
 type ordersStorage interface {
 	GetOrders(ctx context.Context, userID int64) ([]model.IntOrder, error)
-	AddOrder(ctx context.Context, order model.IntOrder, userID int64) error
+	AddOrder(ctx context.Context, number string, userID int64) error
+	GetSingleOrder(ctx context.Context, number string) (model.IntOrder, error)
 }
 
 // OrdersService is the service layer for orders logic.
@@ -42,10 +57,33 @@ func (os *OrdersService) GetOrders(ctx context.Context, userID int64) (model.Get
 }
 
 // AddOrder adds order for a user with the specified userID.
-func (os *OrdersService) AddOrder(ctx context.Context, order *model.Order, userID int64) error {
-	err := os.storage.AddOrder(ctx, order.ToInternal(), userID)
+func (os *OrdersService) AddOrder(ctx context.Context, number string, userID int64) error {
+	if !luhn.Validate(number) {
+		return ErrInvalidOrderNumber
+	}
+	err := os.storage.AddOrder(ctx, number, userID)
 	if err != nil {
 		return fmt.Errorf("error while adding order: %w", err)
 	}
 	return nil
+}
+
+// GetSingleOrder gets a single order by its number and userID.
+// If an order exists but userID doesn't match will return ErrOrderAlreadyExists.
+func (os *OrdersService) GetSingleOrder(ctx context.Context, number string, userID int64) (*model.Order, error) {
+	order, err := os.storage.GetSingleOrder(ctx, number)
+	if userID == order.UserID && err == nil {
+		return nil, ErrOrderAlreadyExists
+	}
+	if userID != order.UserID && err == nil {
+		return nil, ErrOrderNumberTaken
+	}
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNoOrderFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error fetching order: %w", err)
+	}
+	extOrder := order.ToExternal()
+	return &extOrder, nil
 }

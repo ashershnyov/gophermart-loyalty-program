@@ -10,9 +10,9 @@ import (
 )
 
 type params struct {
-	address        string `env:"RUN_ADDRESS" envDefault:""`
-	dbAddress      string `env:"DATABASE_URI" envDefault:""`
-	accrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:""`
+	Address        string `env:"RUN_ADDRESS" envDefault:""`
+	DBAddress      string `env:"DATABASE_URI" envDefault:""`
+	AccrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:""`
 }
 
 func parseStartingParams() params {
@@ -27,16 +27,16 @@ func parseStartingParams() params {
 	accrualAddress := flag.String("r", "", "Specifies the address of the accrual service. Can be overriden with ACCRUAL_SYSTEM_ADDRESS env variable.")
 	flag.Parse()
 
-	if params.address == "" {
-		params.address = *address
+	if params.Address == "" {
+		params.Address = *address
 	}
 
-	if params.dbAddress == "" {
-		params.dbAddress = *dbAddress
+	if params.DBAddress == "" {
+		params.DBAddress = *dbAddress
 	}
 
-	if params.accrualAddress == "" {
-		params.accrualAddress = *accrualAddress
+	if params.AccrualAddress == "" {
+		params.AccrualAddress = *accrualAddress
 	}
 
 	return params
@@ -46,8 +46,8 @@ func main() {
 	params := parseStartingParams()
 
 	srv, err := server.New(
-		config.SetAddress(params.address),
-		config.SetDBAddress(params.dbAddress),
+		config.SetAddress(params.Address),
+		config.SetDBAddress(params.DBAddress),
 	)
 
 	if err != nil {

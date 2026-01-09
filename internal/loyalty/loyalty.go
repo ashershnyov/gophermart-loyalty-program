@@ -61,5 +61,5 @@ func NewHandler(service *Service, withJwt middleware.Middleware) *Handler {
 func (h *Handler) RegisterRoutes(router chi.Router) {
 	h.user.RegisterRoutes(router)
 	h.balance.RegisterRoutes(router)
-	// h.orders.RegisterRoutes(router)
+	h.orders.RegisterRoutes(router)
 }

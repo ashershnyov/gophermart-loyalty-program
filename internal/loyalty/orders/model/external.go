@@ -7,7 +7,7 @@ type Order struct {
 	UploadedAt time.Time `json:"uploaded_at"`
 	Number     string    `json:"number"`
 	Status     string    `json:"status"`
-	Accrual    int       `json:"accrual"`
+	Accrual    float64   `json:"accrual,omitempty"`
 }
 
 // ToExternal converts from external data model to internal.

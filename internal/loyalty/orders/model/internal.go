@@ -7,7 +7,8 @@ type IntOrder struct {
 	UploadedAt time.Time
 	Number     string
 	Status     string
-	Accrual    int
+	Accrual    float64
+	UserID     int64
 }
 
 // ToExternal converts from internal data model to external.
