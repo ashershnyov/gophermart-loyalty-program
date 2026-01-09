@@ -11,8 +11,8 @@ const (
 	qWithdrawFromBalance = `
 		UPDATE gophermart.balance
 		SET updated = NOW(),
-			current = current + $1,
-			total_withdrawn = total_withdrawn - $1
+			current = current - $1,
+			total_withdrawn = total_withdrawn + $1
 		WHERE user_id = $2;
 	`
 	qAddWithdrawal = `
