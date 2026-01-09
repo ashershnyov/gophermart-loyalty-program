@@ -108,15 +108,15 @@ func (os OrdersService) FindOrdersToPoll(ctx context.Context) ([]model.AccrualOr
 		return make([]model.AccrualOrder, 0), fmt.Errorf("error while getting orders: %w", err)
 	}
 
-	resp := make([]model.AccrualOrder, len(orders))
-	for i, o := range orders {
+	resp := make([]model.AccrualOrder, 0, len(orders))
+	for _, o := range orders {
 		extOrder := model.AccrualOrder{
 			Order:   o.Number,
 			Status:  o.Status,
 			Accrual: o.Accrual,
 			UserID:  o.UserID,
 		}
-		resp[i] = extOrder
+		resp = append(resp, extOrder)
 	}
 
 	return resp, nil

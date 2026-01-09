@@ -54,7 +54,7 @@ func (bs *BalanceService) GetWithdrawals(ctx context.Context, userID int64) (mod
 		return make(model.GetWithdrawalsResp, 0), fmt.Errorf("error getting withdrawals: %w", err)
 	}
 
-	resp := make(model.GetWithdrawalsResp, len(withdrawals), 0)
+	resp := make(model.GetWithdrawalsResp, 0, len(withdrawals))
 	for _, w := range withdrawals {
 		resp = append(resp, w.ToExternal())
 	}
