@@ -25,7 +25,7 @@ const qUpdateOrderStatus = `
 	SET updated = NOW(),
 		status = $1,
 		accrual = $2
-	WHERE order_id = $3;
+	WHERE number = $3;
 `
 
 // UpdateOrderAccrual updates status and accrual for the order.
