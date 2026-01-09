@@ -115,8 +115,6 @@ func (p *Poller) startPolling(
 		ordersChan <- toPoll.Order
 	}
 
-	close(ordersChan)
-
 	slog.Info("processsing results...")
 	for res := range resChan {
 		p.os.UpdateOrderAccrual(ctx, *res)
@@ -140,8 +138,8 @@ func (p *Poller) PollerLoop(ctx context.Context) {
 				slog.Warn(err.Error())
 			}
 
-			ordersChan := make(chan string, len(pollable))
-			resChan := make(chan *model.AccrualOrder, len(pollable))
+			ordersChan := make(chan string)
+			resChan := make(chan *model.AccrualOrder)
 
 			err = p.startPolling(ctx, pollable, ordersChan, resChan)
 			if err != nil {
