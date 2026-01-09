@@ -58,7 +58,7 @@ func (s *Storage) GetSingleOrder(ctx context.Context, number string) (model.IntO
 }
 
 const qFindOrdersToPoll = `
-	SELECT number FROM gophermart.orders
+	SELECT number, status, accrual, created FROM gophermart.orders
 	WHERE status != $1;
 `
 
