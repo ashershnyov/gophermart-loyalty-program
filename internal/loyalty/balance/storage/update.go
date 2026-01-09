@@ -16,7 +16,7 @@ const (
 		WHERE user_id = $2;
 	`
 	qAddWithdrawal = `
-		INSER INTO gophermart.withdrawals (user_id, order_id, amount)
+		INSERT INTO gophermart.withdrawals (user_id, order_id, amount)
 		VALUES ($1, $2, $3);
 	`
 )
