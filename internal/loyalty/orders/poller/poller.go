@@ -80,12 +80,11 @@ func (p *Poller) pollWorker(
 	ctx context.Context,
 	ordersChan <-chan string,
 	resChan chan<- *model.AccrualOrder,
-	errChan chan<- error,
 ) {
 	for order := range ordersChan {
 		res, err := p.accrualRequest(order)
 		if err != nil {
-			errChan <- err
+			slog.Warn("error making accrual request" + err.Error())
 		}
 		resChan <- res
 	}
@@ -100,10 +99,8 @@ func (p *Poller) startPolling(
 ) error {
 	slog.Info("polling...")
 
-	errChan := make(chan error)
-
 	for i := 0; i < p.cfg.WorkerNum; i++ {
-		go p.pollWorker(ctx, ordersChan, resChan, errChan)
+		go p.pollWorker(ctx, ordersChan, resChan)
 	}
 
 	for _, toPoll := range pollable {
@@ -120,7 +117,7 @@ func (p *Poller) startPolling(
 }
 
 // PollerLoop once in cfg.Interval gathers all pollable orders and polls all orders.
-func (p *Poller) PollerLoop(ctx context.Context, errChan chan<- error) {
+func (p *Poller) PollerLoop(ctx context.Context) {
 	ticker := time.NewTicker(p.cfg.Interval)
 	slog.Info("started the polling loop")
 	defer ticker.Stop()
@@ -132,7 +129,6 @@ func (p *Poller) PollerLoop(ctx context.Context, errChan chan<- error) {
 			pollable, err := p.os.FindOrdersToPoll(ctx)
 			if err != nil {
 				slog.Warn(err.Error())
-				errChan <- err
 			}
 
 			ordersChan := make(chan string, len(pollable))
@@ -141,7 +137,6 @@ func (p *Poller) PollerLoop(ctx context.Context, errChan chan<- error) {
 			err = p.startPolling(ctx, pollable, ordersChan, resChan)
 			if err != nil {
 				slog.Warn(err.Error())
-				errChan <- err
 			}
 		case <-ctx.Done():
 			return

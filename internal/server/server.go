@@ -74,12 +74,6 @@ func (s *server) Run() error {
 		return fmt.Errorf("could not create JWT provider: %w", err)
 	}
 
-	service := loyalty.NewService(s.db, jwtProvider, s.config.AccrualAddress)
-
-	handler := loyalty.NewHandler(service, middleware.JWTAuth(jwtProvider))
-
-	handler.RegisterRoutes(s.router)
-
 	err = s.db.PingContext(context.Background())
 	if err != nil {
 		return fmt.Errorf("an error trying to ping the DB: %w", err)
@@ -89,6 +83,12 @@ func (s *server) Run() error {
 	if err != nil {
 		return fmt.Errorf("an error occurred when starting Server: %w", err)
 	}
+
+	service := loyalty.NewService(s.db, jwtProvider, s.config.AccrualAddress)
+
+	handler := loyalty.NewHandler(service, middleware.JWTAuth(jwtProvider))
+
+	handler.RegisterRoutes(s.router)
 
 	go s.ListenAndServe()
 
