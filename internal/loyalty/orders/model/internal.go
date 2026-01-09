@@ -18,5 +18,6 @@ func (io *IntOrder) ToExternal() Order {
 		Number:     io.Number,
 		Status:     io.Status,
 		Accrual:    io.Accrual,
+		UserID:     io.UserID,
 	}
 }

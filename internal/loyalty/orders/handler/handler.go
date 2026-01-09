@@ -17,7 +17,7 @@ import (
 type ordersService interface {
 	GetOrders(ctx context.Context, userID int64) (model.GetOrdersResp, error)
 	AddOrder(ctx context.Context, number string, userID int64) error
-	GetSingleOrder(ctx context.Context, number string, userID int64) (*model.Order, error)
+	GetAndCompareOrder(ctx context.Context, number string, userID int64) (*model.Order, error)
 }
 
 // Handler is a orders handler.
@@ -80,7 +80,7 @@ func (h *Handler) addOrder() http.HandlerFunc {
 			return
 		}
 		orderNumber := buf.String()
-		_, err = h.os.GetSingleOrder(r.Context(), orderNumber, userID)
+		_, err = h.os.GetAndCompareOrder(r.Context(), orderNumber, userID)
 		if errors.Is(err, service.ErrOrderNumberTaken) {
 			http.Error(w, "order with that number already exists", http.StatusConflict)
 			return

@@ -16,6 +16,7 @@ import (
 type orderService interface {
 	FindOrdersToPoll(ctx context.Context) ([]model.AccrualOrder, error)
 	UpdateOrderAccrual(ctx context.Context, order model.AccrualOrder) error
+	GetSingleOrder(ctx context.Context, number string) (*model.Order, error)
 }
 
 type balanceService interface {
@@ -127,6 +128,15 @@ func (p *Poller) startPolling(
 	slog.Info("processing results...")
 	for res := range resChan {
 		err := p.os.UpdateOrderAccrual(ctx, *res)
+		if err != nil {
+			slog.Warn(err.Error())
+		}
+		var order *model.Order
+		order, err = p.os.GetSingleOrder(ctx, res.Order)
+		if err != nil {
+			slog.Warn(err.Error())
+		}
+		err = p.bs.AddAccrual(ctx, order.UserID, res.Accrual)
 		if err != nil {
 			slog.Warn(err.Error())
 		}

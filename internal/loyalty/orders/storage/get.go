@@ -58,7 +58,7 @@ func (s *Storage) GetSingleOrder(ctx context.Context, number string) (model.IntO
 }
 
 const qFindOrdersToPoll = `
-	SELECT number, status, accrual, created FROM gophermart.orders
+	SELECT number, status, accrual, created, user_id FROM gophermart.orders
 	WHERE status != $1;
 `
 
@@ -73,7 +73,7 @@ func (s *Storage) FindOrdersToPoll(ctx context.Context) ([]model.IntOrder, error
 	orders := []model.IntOrder{}
 	for rows.Next() {
 		var order model.IntOrder
-		err = rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt)
+		err = rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
 		if err != nil {
 			return nil, fmt.Errorf(errFetchingOrders, err)
 		}

@@ -70,9 +70,9 @@ func (os *OrdersService) AddOrder(ctx context.Context, number string, userID int
 	return nil
 }
 
-// GetSingleOrder gets a single order by its number and userID.
+// GetAndCompareOrder gets a single order by its number and userID.
 // If an order exists but userID doesn't match will return ErrOrderAlreadyExists.
-func (os *OrdersService) GetSingleOrder(ctx context.Context, number string, userID int64) (*model.Order, error) {
+func (os *OrdersService) GetAndCompareOrder(ctx context.Context, number string, userID int64) (*model.Order, error) {
 	order, err := os.storage.GetSingleOrder(ctx, number)
 	if userID == order.UserID && err == nil {
 		return nil, ErrOrderAlreadyExists
@@ -83,6 +83,17 @@ func (os *OrdersService) GetSingleOrder(ctx context.Context, number string, user
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNoOrderFound
 	}
+	if err != nil {
+		return nil, fmt.Errorf("error fetching order: %w", err)
+	}
+	extOrder := order.ToExternal()
+	return &extOrder, nil
+}
+
+// GetSingleOrder gets a single order by its number and userID.
+// If an order exists but userID doesn't match will return ErrOrderAlreadyExists.
+func (os *OrdersService) GetSingleOrder(ctx context.Context, number string) (*model.Order, error) {
+	order, err := os.storage.GetSingleOrder(ctx, number)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching order: %w", err)
 	}
@@ -103,6 +114,7 @@ func (os OrdersService) FindOrdersToPoll(ctx context.Context) ([]model.AccrualOr
 			Order:   o.Number,
 			Status:  o.Status,
 			Accrual: o.Accrual,
+			UserID:  o.UserID,
 		}
 		resp = append(resp, extOrder)
 	}
