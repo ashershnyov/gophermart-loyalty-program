@@ -30,7 +30,7 @@ func NewService(db db.DB, jwtGen *jwt.Generator, accrualAddress string) *Service
 		orderService   = oservice.New(db)
 		balanceService = bservice.New(db)
 		userService    = uservice.New(db, jwtGen)
-		poller, _      = poller.New(&orderService, accrualAddress)
+		poller, _      = poller.New(&orderService, &balanceService, accrualAddress)
 	)
 
 	errChan := make(chan error)

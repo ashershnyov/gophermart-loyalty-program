@@ -21,7 +21,7 @@ func (s *Storage) AddOrder(ctx context.Context, number string, userID int64) err
 }
 
 const qUpdateOrderStatus = `
-	UPDATE 
+	UPDATE gophermart.orders
 	SET updated = NOW(),
 		status = $1,
 		accrual = $2

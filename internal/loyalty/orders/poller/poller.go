@@ -16,14 +16,19 @@ type orderService interface {
 	UpdateOrderAccrual(ctx context.Context, order model.AccrualOrder) error
 }
 
+type balanceService interface {
+	AddAccrual(ctx context.Context, userID int64, amount float64) error
+}
+
 // Poller polls accrual service for updates on the orders.
 type Poller struct {
 	cfg *Config
 	os  orderService
+	bs  balanceService
 }
 
 // New creates a new poller.
-func New(os orderService, address string) (*Poller, error) {
+func New(os orderService, bs balanceService, address string) (*Poller, error) {
 	cfg, err := NewConfig(address)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new poller: %w", err)
@@ -31,6 +36,7 @@ func New(os orderService, address string) (*Poller, error) {
 	return &Poller{
 		cfg: cfg,
 		os:  os,
+		bs:  bs,
 	}, nil
 }
 

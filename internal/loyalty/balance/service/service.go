@@ -22,6 +22,7 @@ type balanceStorage interface {
 	GetBalance(ctx context.Context, userID int64) (model.IntBalanceInfo, error)
 	GetWithdrawals(ctx context.Context, userID int64) ([]model.IntWithdrawal, error)
 	Withdraw(ctx context.Context, userID int64, orderID string, amount float64) error
+	AddAccrual(ctx context.Context, userID int64, amount float64) error
 }
 
 // BalanceService is the service layer for balance logic.
@@ -79,4 +80,9 @@ func (bs *BalanceService) Withdraw(ctx context.Context, withdrawal model.Withdra
 		return fmt.Errorf("error performig withdrawal: %w", err)
 	}
 	return nil
+}
+
+// AddAccrual adds passed amount to user's balance.
+func (bs *BalanceService) AddAccrual(ctx context.Context, userID int64, amount float64) error {
+	return bs.storage.AddAccrual(ctx, userID, amount)
 }

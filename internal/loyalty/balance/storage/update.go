@@ -43,6 +43,22 @@ func (s *Storage) Withdraw(ctx context.Context, userID int64, orderID string, am
 	return tx.Commit()
 }
 
+const qAddAccrual = `
+	UPDATE gophermart.balance
+	SET updated = NOW(),
+		current = current + $1
+	WHERE user_id = $2;
+`
+
+// AddAccrual adds passed amount to user's balance.
+func (s *Storage) AddAccrual(ctx context.Context, userID int64, amount float64) error {
+	_, err := s.db.ExecContext(ctx, qAddAccrual, amount, userID)
+	if err != nil {
+		return fmt.Errorf("failed to add accrual to user's balance: %w", err)
+	}
+	return nil
+}
+
 const qAddBalance = `
 	INSERT INTO gophermart.balance (user_id)
 	VALUES ($1);

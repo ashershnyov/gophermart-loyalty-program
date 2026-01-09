@@ -60,6 +60,7 @@ func (h *Handler) getOrders() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		w.Write(resp)
 	}
 }
@@ -79,12 +80,7 @@ func (h *Handler) addOrder() http.HandlerFunc {
 			return
 		}
 		orderNumber := buf.String()
-
 		_, err = h.os.GetSingleOrder(r.Context(), orderNumber, userID)
-		if errors.Is(err, service.ErrInvalidOrderNumber) {
-			http.Error(w, "invalid order number", http.StatusUnprocessableEntity)
-			return
-		}
 		if errors.Is(err, service.ErrOrderNumberTaken) {
 			http.Error(w, "order with that number already exists", http.StatusConflict)
 			return
@@ -100,6 +96,10 @@ func (h *Handler) addOrder() http.HandlerFunc {
 
 		err = h.os.AddOrder(r.Context(), orderNumber, userID)
 		if err != nil {
+			if errors.Is(err, service.ErrInvalidOrderNumber) {
+				http.Error(w, "invalid order number", http.StatusUnprocessableEntity)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
