@@ -126,7 +126,10 @@ func (p *Poller) startPolling(
 
 	slog.Info("processsing results...")
 	for res := range resChan {
-		p.os.UpdateOrderAccrual(ctx, *res)
+		err := p.os.UpdateOrderAccrual(ctx, *res)
+		if err != nil {
+			slog.Warn(err.Error())
+		}
 	}
 
 	return nil

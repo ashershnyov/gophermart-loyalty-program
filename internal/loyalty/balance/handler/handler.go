@@ -96,6 +96,7 @@ func (h *Handler) withdraw() http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Accept", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
 }

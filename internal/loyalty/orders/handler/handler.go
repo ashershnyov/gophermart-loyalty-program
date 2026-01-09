@@ -104,6 +104,7 @@ func (h *Handler) addOrder() http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Accept", "application/json")
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
