@@ -48,7 +48,7 @@ func (os *OrdersService) GetOrders(ctx context.Context, userID int64) (model.Get
 		return make(model.GetOrdersResp, 0), fmt.Errorf("error while getting orders: %w", err)
 	}
 
-	resp := make(model.GetOrdersResp, len(orders), 0)
+	resp := make(model.GetOrdersResp, 0, len(orders))
 	for _, o := range orders {
 		resp = append(resp, o.ToExternal())
 	}
