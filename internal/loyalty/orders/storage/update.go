@@ -32,7 +32,7 @@ const qUpdateOrderStatus = `
 func (s *Storage) UpdateOrderAccrual(ctx context.Context, status string, accrual float64, number string) error {
 	_, err := s.db.ExecContext(ctx, qUpdateOrderStatus, status, accrual, number)
 	if err != nil {
-		return fmt.Errorf("an error occurred when updating order %s", number)
+		return fmt.Errorf("an error occurred when updating order %s: %w", number, err)
 	}
 	return nil
 }
