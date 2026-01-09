@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -44,25 +45,31 @@ func New(os orderService, bs balanceService, address string) (*Poller, error) {
 func (p *Poller) accrualRequest(number string) (*model.AccrualOrder, error) {
 	req, err := http.NewRequest("GET", p.cfg.Address+number, nil)
 	if err != nil {
+		slog.Warn(err.Error())
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		slog.Warn(err.Error())
 		return nil, fmt.Errorf("error sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	slog.Info("sent request to accrual")
+
 	var buf bytes.Buffer
 	_, err = buf.ReadFrom(resp.Body)
 	if err != nil {
+		slog.Warn(err.Error())
 		return nil, fmt.Errorf("error reading response: %w", err)
 	}
 
 	var order model.AccrualOrder
 	err = json.Unmarshal(buf.Bytes(), &order)
 	if err != nil {
+		slog.Warn(err.Error())
 		return nil, fmt.Errorf("error parsing response: %w", err)
 	}
 
