@@ -114,7 +114,7 @@ func (os OrdersService) FindOrdersToPoll(ctx context.Context) ([]model.AccrualOr
 func (os OrdersService) UpdateOrderAccrual(ctx context.Context, order model.AccrualOrder) error {
 	err := os.storage.UpdateOrderAccrual(ctx, order.Status, order.Accrual, order.Order)
 	if err != nil {
-		return fmt.Errorf("error while getting updating order: %w", err)
+		return fmt.Errorf("error while updating order: %w", err)
 	}
 	return nil
 }
