@@ -85,6 +85,7 @@ func (p *Poller) pollWorker(
 	resChan chan<- *model.AccrualOrder,
 ) {
 	for order := range ordersChan {
+		slog.Info("processing poll...")
 		res, err := p.accrualRequest(order)
 		if err != nil {
 			slog.Warn("error making accrual request" + err.Error())
