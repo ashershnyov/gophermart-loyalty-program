@@ -118,9 +118,11 @@ func (p *Poller) startPolling(
 	for _, toPoll := range pollable {
 		ordersChan <- toPoll.Order
 	}
+	close(ordersChan)
 
 	wg.Wait()
-	close(ordersChan)
+
+	close(resChan)
 
 	slog.Info("processsing results...")
 	for res := range resChan {
@@ -146,7 +148,7 @@ func (p *Poller) PollerLoop(ctx context.Context) {
 			}
 
 			ordersChan := make(chan string)
-			resChan := make(chan *model.AccrualOrder)
+			resChan := make(chan *model.AccrualOrder, len(pollable))
 
 			err = p.startPolling(ctx, pollable, ordersChan, resChan)
 			if err != nil {
