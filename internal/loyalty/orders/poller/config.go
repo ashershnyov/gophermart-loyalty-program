@@ -7,7 +7,7 @@ import (
 
 const (
 	defaultWorkers  = 3
-	defaultInterval = 500 * time.Millisecond
+	defaultInterval = 2 * time.Second
 )
 
 // Config defines poller's configuration.
