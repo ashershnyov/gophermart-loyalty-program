@@ -103,8 +103,12 @@ func (p *Poller) startPolling(
 	slog.Info("polling...")
 
 	for i := 0; i < p.cfg.WorkerNum; i++ {
-		go p.pollWorker(ctx, ordersChan, resChan)
+		go func() {
+			p.pollWorker(ctx, ordersChan, resChan)
+		}()
 	}
+
+	slog.Info("adding orders to the channel...")
 
 	for _, toPoll := range pollable {
 		ordersChan <- toPoll.Order
@@ -112,6 +116,7 @@ func (p *Poller) startPolling(
 
 	close(ordersChan)
 
+	slog.Info("processsing results...")
 	for res := range resChan {
 		p.os.UpdateOrderAccrual(ctx, *res)
 	}
