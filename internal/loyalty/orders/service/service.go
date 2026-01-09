@@ -27,6 +27,8 @@ type ordersStorage interface {
 	GetOrders(ctx context.Context, userID int64) ([]model.IntOrder, error)
 	AddOrder(ctx context.Context, number string, userID int64) error
 	GetSingleOrder(ctx context.Context, number string) (model.IntOrder, error)
+	FindOrdersToPoll(ctx context.Context) ([]model.IntOrder, error)
+	UpdateOrderAccrual(ctx context.Context, status string, accrual float64, number string) error
 }
 
 // OrdersService is the service layer for orders logic.
@@ -86,4 +88,33 @@ func (os *OrdersService) GetSingleOrder(ctx context.Context, number string, user
 	}
 	extOrder := order.ToExternal()
 	return &extOrder, nil
+}
+
+// FindOrdersToPoll returns the list of the orders to be polled.
+func (os OrdersService) FindOrdersToPoll(ctx context.Context) ([]model.AccrualOrder, error) {
+	orders, err := os.storage.FindOrdersToPoll(ctx)
+	if err != nil {
+		return make([]model.AccrualOrder, 0), fmt.Errorf("error while getting orders: %w", err)
+	}
+
+	resp := make([]model.AccrualOrder, 0, len(orders))
+	for _, o := range orders {
+		extOrder := model.AccrualOrder{
+			Order:   o.Number,
+			Status:  o.Status,
+			Accrual: o.Accrual,
+		}
+		resp = append(resp, extOrder)
+	}
+
+	return resp, nil
+}
+
+// UpdateOrderAccrual updates accrual and status of the order.
+func (os OrdersService) UpdateOrderAccrual(ctx context.Context, order model.AccrualOrder) error {
+	err := os.storage.UpdateOrderAccrual(ctx, order.Status, order.Accrual, order.Order)
+	if err != nil {
+		return fmt.Errorf("error while getting updating order: %w", err)
+	}
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -22,7 +21,12 @@ type loggingResponseWriter struct {
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
 	r.responseData.size += size
-	r.responseData.resp = b
+	if r.responseData.size <= 1024 {
+		r.responseData.resp = append(r.responseData.resp, b...)
+	} else if len(r.responseData.resp) < 1024 {
+		remaining := 1024 - len(r.responseData.resp)
+		r.responseData.resp = append(r.responseData.resp, b[:remaining]...)
+	}
 	return size, err
 }
 
@@ -58,7 +62,7 @@ func Logging(logger *slog.Logger) Middleware {
 
 				logLevel = slog.LevelInfo
 			default:
-				errorMsg = strconv.QuoteToASCII(string(lrw.responseData.resp))
+				errorMsg = string(lrw.responseData.resp)
 				logLevel = slog.LevelWarn
 			}
 

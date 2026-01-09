@@ -74,7 +74,7 @@ func (s *server) Run() error {
 		return fmt.Errorf("could not create JWT provider: %w", err)
 	}
 
-	service := loyalty.NewService(s.db, jwtProvider)
+	service := loyalty.NewService(s.db, jwtProvider, s.config.AccrualAddress)
 
 	handler := loyalty.NewHandler(service, middleware.JWTAuth(jwtProvider))
 

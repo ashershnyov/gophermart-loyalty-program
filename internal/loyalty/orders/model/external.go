@@ -22,3 +22,10 @@ func (o *Order) ToInternal() IntOrder {
 
 // GetOrdersResp is a response body for getOrders handler.
 type GetOrdersResp []Order
+
+// AccrualOrder defines an accrual response body.
+type AccrualOrder struct {
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual,omitempty"`
+}

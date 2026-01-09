@@ -19,3 +19,20 @@ func (s *Storage) AddOrder(ctx context.Context, number string, userID int64) err
 	}
 	return nil
 }
+
+const qUpdateOrderStatus = `
+	UPDATE 
+	SET updated = NOW(),
+		status = $1,
+		accrual = $2
+	WHERE order_id = $3;
+`
+
+// UpdateOrderAccrual updates status and accrual for the order.
+func (s *Storage) UpdateOrderAccrual(ctx context.Context, status string, accrual float64, number string) error {
+	_, err := s.db.ExecContext(ctx, qUpdateOrderStatus, status, accrual, number)
+	if err != nil {
+		return fmt.Errorf("an error occurred when updating order %s", number)
+	}
+	return nil
+}

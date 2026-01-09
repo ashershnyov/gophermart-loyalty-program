@@ -56,3 +56,35 @@ func (s *Storage) GetSingleOrder(ctx context.Context, number string) (model.IntO
 	}
 	return order, nil
 }
+
+const qFindOrdersToPoll = `
+	SELECT number FROM gophermart.orders
+	WHERE status != $1;
+`
+
+// FindOrdersToPoll returns all orders that have to be polled.
+func (s *Storage) FindOrdersToPoll(ctx context.Context) ([]model.IntOrder, error) {
+	rows, err := s.db.QueryContext(ctx, qFindOrdersToPoll, model.StatusProcessed)
+	if err != nil {
+		return nil, fmt.Errorf(errFetchingOrders, err)
+	}
+	defer rows.Close()
+
+	orders := []model.IntOrder{}
+	for rows.Next() {
+		var order model.IntOrder
+		err = rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt)
+		if err != nil {
+			return nil, fmt.Errorf(errFetchingOrders, err)
+		}
+		orders = append(orders, order)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf(errFetchingOrders, err)
+	}
+
+	return orders, nil
+
+}

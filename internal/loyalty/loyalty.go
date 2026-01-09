@@ -1,9 +1,12 @@
 package loyalty
 
 import (
+	"context"
+
 	bhandler "github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/balance/handler"
 	bservice "github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/balance/service"
 	ohandler "github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/orders/handler"
+	"github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/orders/poller"
 	oservice "github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/orders/service"
 	uhandler "github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/user/handler"
 	uservice "github.com/ashershnyov/gophermart-loyalty-program/internal/loyalty/user/service"
@@ -18,19 +21,26 @@ type Service struct {
 	orders  *oservice.OrdersService
 	balance *bservice.BalanceService
 	user    *uservice.UserService
+	poller  *poller.Poller
 }
 
 // NewService creates a new loyalty service.
-func NewService(db db.DB, jwtGen *jwt.Generator) *Service {
+func NewService(db db.DB, jwtGen *jwt.Generator, accrualAddress string) *Service {
 	var (
 		orderService   = oservice.New(db)
 		balanceService = bservice.New(db)
 		userService    = uservice.New(db, jwtGen)
+		poller, _      = poller.New(&orderService, accrualAddress)
 	)
+
+	errChan := make(chan error)
+	go poller.PollerLoop(context.Background(), errChan)
+
 	return &Service{
 		orders:  &orderService,
 		balance: &balanceService,
 		user:    &userService,
+		poller:  poller,
 	}
 }
 

@@ -48,6 +48,7 @@ func main() {
 	srv, err := server.New(
 		config.SetAddress(params.Address),
 		config.SetDBAddress(params.DBAddress),
+		config.SetAccrualAddress(params.AccrualAddress),
 	)
 
 	if err != nil {
