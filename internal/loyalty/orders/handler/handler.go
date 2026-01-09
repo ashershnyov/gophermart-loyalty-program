@@ -59,6 +59,7 @@ func (h *Handler) getOrders() http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(resp)
 	}
 }

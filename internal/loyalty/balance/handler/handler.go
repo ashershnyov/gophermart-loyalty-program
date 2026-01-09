@@ -55,6 +55,7 @@ func (h *Handler) getBalance() http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(resp)
 	}
@@ -124,6 +125,7 @@ func (h *Handler) getWithdrawals() http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(resp)
 	}
 }
