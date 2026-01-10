@@ -17,7 +17,7 @@ const qGetBalance = `
 // GetBalance returns balance for user with the provided userID.
 func (s *Storage) GetBalance(ctx context.Context, userID int64) (model.IntBalanceInfo, error) {
 	var balance = model.IntBalanceInfo{}
-	err := s.db.QueryOneContext(ctx, balance, qGetBalance, userID)
+	err := s.db.QueryOneContext(ctx, &balance, qGetBalance, userID)
 	if err != nil {
 		return model.IntBalanceInfo{}, fmt.Errorf("an error occurred when fetching balance DB for user %v: %w", userID, err)
 	}
@@ -33,7 +33,7 @@ const qGetWithdrawals = `
 // GetWithdrawals returns withdrawals for user with the provided userID.
 func (s *Storage) GetWithdrawals(ctx context.Context, userID int64) ([]model.IntWithdrawal, error) {
 	var withdrawals = []model.IntWithdrawal{}
-	err := s.db.QueryManyContext(ctx, withdrawals, qGetWithdrawals, userID)
+	err := s.db.QueryManyContext(ctx, &withdrawals, qGetWithdrawals, userID)
 	if err != nil {
 		return nil, fmt.Errorf(errFetchingWithdrawals, err)
 	}
