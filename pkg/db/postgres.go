@@ -159,5 +159,5 @@ func (p *Postgres) CommitTx(ctx context.Context) error {
 	if !ok || tx == nil {
 		return ErrNoTransactionInCtx
 	}
-	return nil
+	return tx.Commit()
 }
