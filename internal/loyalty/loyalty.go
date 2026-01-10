@@ -24,6 +24,11 @@ type Service struct {
 	poller  *poller.Poller
 }
 
+// StartPolling starts order polling loop.
+func (s *Service) StartPolling(ctx context.Context) {
+	go s.poller.PollerLoop(ctx)
+}
+
 // NewService creates a new loyalty service.
 func NewService(db db.DB, jwtGen *jwt.Generator, accrualAddress string) *Service {
 	var (
@@ -32,9 +37,6 @@ func NewService(db db.DB, jwtGen *jwt.Generator, accrualAddress string) *Service
 		userService    = uservice.New(db, jwtGen)
 		poller, _      = poller.New(&orderService, &balanceService, accrualAddress)
 	)
-
-	go poller.PollerLoop(context.Background())
-
 	return &Service{
 		orders:  &orderService,
 		balance: &balanceService,

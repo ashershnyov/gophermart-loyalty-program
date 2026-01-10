@@ -86,6 +86,9 @@ func (s *server) Run() error {
 
 	service := loyalty.NewService(s.db, jwtProvider, s.config.AccrualAddress)
 
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	service.StartPolling(ctx)
+
 	handler := loyalty.NewHandler(service, middleware.JWTAuth(jwtProvider))
 
 	handler.RegisterRoutes(s.router)
@@ -96,6 +99,7 @@ func (s *server) Run() error {
 	signal.Notify(term, syscall.SIGTERM, syscall.SIGINT)
 	<-term
 
+	cancelFunc()
 	goose.Down(s.db.SQLDB(), "./migrations")
 
 	return nil
