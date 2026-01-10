@@ -24,23 +24,22 @@ const (
 // Withdraw adds a new withdrawal and deducts the amount
 // from the balance in one transaction for user with the given userID.
 func (s *Storage) Withdraw(ctx context.Context, userID int64, orderID string, amount float64) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf(errWithdrawing, err)
-	}
-	defer tx.Rollback()
-
-	_, err = tx.ExecContext(ctx, qWithdrawFromBalance, amount, userID)
+	ctx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf(errWithdrawing, err)
 	}
 
-	_, err = tx.ExecContext(ctx, qAddWithdrawal, userID, orderID, amount)
+	_, err = s.db.ExecContext(ctx, qWithdrawFromBalance, amount, userID)
 	if err != nil {
 		return fmt.Errorf(errWithdrawing, err)
 	}
 
-	return tx.Commit()
+	_, err = s.db.ExecContext(ctx, qAddWithdrawal, userID, orderID, amount)
+	if err != nil {
+		return fmt.Errorf(errWithdrawing, err)
+	}
+
+	return s.db.CommitTx(ctx)
 }
 
 const qAddAccrual = `

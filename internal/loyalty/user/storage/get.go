@@ -15,13 +15,11 @@ const qFindByLogin = `
 
 // FindByLogin finds user by his login and returns his ID.
 func (s *Storage) FindByLogin(ctx context.Context, login string) (model.IntUser, error) {
-	row := s.db.QueryRowContext(ctx, qFindByLogin, login)
-	var user = model.IntUser{
-		Login: login,
-	}
-	err := row.Scan(&user.ID, &user.Password)
+	var user = model.IntUser{}
+	err := s.db.QueryOneContext(ctx, &user, qFindByLogin, login)
 	if err != nil {
 		return model.IntUser{}, fmt.Errorf("an error occurred when fetching user data for login %v: %w", login, err)
 	}
+	user.Login = login
 	return user, nil
 }

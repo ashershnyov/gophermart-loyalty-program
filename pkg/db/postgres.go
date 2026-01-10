@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 )
 
 func (*Postgres) markUnretriable(err error) error {
@@ -34,13 +35,13 @@ func (*Postgres) markUnretriable(err error) error {
 
 // Postgres is a simple wrapper over the sql.DB connector.
 type Postgres struct {
-	*sql.DB
+	*sqlx.DB
 	maxRetries int
 }
 
 // NewPostgres creates a Postgres wrapper.
 func NewPostgres(ctx context.Context, address string, maxRetries int) (*Postgres, error) {
-	db, err := sql.Open("pgx", address)
+	db, err := sqlx.Open("pgx", address)
 	if err != nil {
 		return nil, err
 	}
@@ -50,54 +51,111 @@ func NewPostgres(ctx context.Context, address string, maxRetries int) (*Postgres
 	}, nil
 }
 
+// SQLDB returns DB connection instance as an sql.DB pointer.
 func (p *Postgres) SQLDB() *sql.DB {
-	return p.DB
+	return p.DB.DB
 }
 
+// PingContext pings the DB.
 func (p *Postgres) PingContext(ctx context.Context) error {
 	return retrier.WithRetry(p.maxRetries, func() error {
 		return p.markUnretriable(p.DB.PingContext(ctx))
 	})
 }
 
-func (p *Postgres) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+// QueryOneContext executes the single-row SELECT query and unmarshals its retults into dst.
+// Would use the transcation if present in the context.
+func (p *Postgres) QueryOneContext(ctx context.Context, dst any, query string, args ...any) error {
 	var (
-		r   *sql.Rows
-		err error
+		tx, ok     = ctx.Value(TxKey).(*sqlx.Tx)
+		selectFunc func(context.Context, string, ...any) *sqlx.Row
+	)
+
+	if !ok || tx == nil {
+		selectFunc = p.DB.QueryRowxContext
+	} else {
+		selectFunc = tx.QueryRowxContext
+	}
+
+	err := retrier.WithRetry(p.maxRetries, func() error {
+		var err error
+		err = selectFunc(ctx, query, args...).StructScan(dst)
+		return p.markUnretriable(err)
+	})
+	return err
+}
+
+// QueryManyContext executes the multi-row SELECT query and unmarshals its retults
+// into dst which should be a slice type.
+// Would use the transcation if present in the context.
+func (p *Postgres) QueryManyContext(ctx context.Context, dst any, query string, args ...any) error {
+	var (
+		tx, ok     = ctx.Value(TxKey).(*sqlx.Tx)
+		selectFunc func(context.Context, any, string, ...any) error
+	)
+
+	if !ok || tx == nil {
+		selectFunc = p.DB.SelectContext
+	} else {
+		selectFunc = tx.GetContext
+	}
+
+	err := retrier.WithRetry(p.maxRetries, func() error {
+		var err error
+		err = selectFunc(ctx, dst, query, args...)
+		return p.markUnretriable(err)
+	})
+	return err
+}
+
+// ExecContext executes the passed query. Would use the transcation if present in the context.
+func (p *Postgres) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	var (
+		r      sql.Result
+		err    error
+		tx, ok = ctx.Value(TxKey).(*sqlx.Tx)
 	)
 	err = retrier.WithRetry(p.maxRetries, func() error {
 		var err error
-		r, err = p.DB.QueryContext(ctx, query, args...)
-		if r != nil && r.Err() != nil {
-			return p.markUnretriable(r.Err())
+		if !ok || tx == nil {
+			r, err = p.DB.ExecContext(ctx, query, args...)
+		} else {
+			r, err = tx.ExecContext(ctx, query, args...)
 		}
 		return p.markUnretriable(err)
 	})
+
+	if err != nil && ok && tx != nil {
+		tx.Rollback()
+	}
+
 	return r, err
 }
 
-func (p *Postgres) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+// BeginTx creates a new transcation and puts it into the returned context.
+func (p *Postgres) BeginTx(ctx context.Context, opts *sql.TxOptions) (context.Context, error) {
 	var (
-		r   sql.Result
-		err error
+		t      *sqlx.Tx
+		newCtx context.Context
+		err    error
 	)
 	err = retrier.WithRetry(p.maxRetries, func() error {
 		var err error
-		r, err = p.DB.ExecContext(ctx, query, args...)
+		t, err = p.DB.BeginTxx(ctx, opts)
+		if err != nil {
+			return p.markUnretriable(err)
+		}
+		newCtx = context.WithValue(ctx, TxKey, t)
 		return p.markUnretriable(err)
 	})
-	return r, err
+	return newCtx, err
 }
 
-func (p *Postgres) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	var (
-		t   *sql.Tx
-		err error
-	)
-	err = retrier.WithRetry(p.maxRetries, func() error {
-		var err error
-		t, err = p.DB.BeginTx(ctx, opts)
-		return p.markUnretriable(err)
-	})
-	return t, err
+// CommitTx commits the transaction inside the passed context.
+func (p *Postgres) CommitTx(ctx context.Context) error {
+	tx, ok := ctx.Value(TxKey).(*sqlx.Tx)
+	if !ok || tx == nil {
+		return ErrNoTransactionInCtx
+	}
+	return nil
 }

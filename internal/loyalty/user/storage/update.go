@@ -15,11 +15,10 @@ const qAddUser = `
 
 // AddUser inserts a new user.
 func (s *Storage) AddUser(ctx context.Context, user model.IntUser) (int64, error) {
-	row := s.db.QueryRowContext(ctx, qAddUser, user.Login, user.Password)
-	var userID int64
-	err := row.Scan(&userID)
+	var userRet = model.IntUser{}
+	err := s.db.QueryOneContext(ctx, &user, qAddUser, user.Login, user.Password)
 	if err != nil {
 		return 0, fmt.Errorf("failed adding user: %w", err)
 	}
-	return userID, nil
+	return userRet.ID, nil
 }
