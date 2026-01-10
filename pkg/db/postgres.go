@@ -68,17 +68,17 @@ func (p *Postgres) PingContext(ctx context.Context) error {
 func (p *Postgres) QueryOneContext(ctx context.Context, dst any, query string, args ...any) error {
 	var (
 		tx, ok     = ctx.Value(TxKey).(*sqlx.Tx)
-		selectFunc func(context.Context, string, ...any) *sqlx.Row
+		selectFunc func(context.Context, any, string, ...any) error
 	)
 
 	if !ok || tx == nil {
-		selectFunc = p.DB.QueryRowxContext
+		selectFunc = p.DB.SelectContext
 	} else {
-		selectFunc = tx.QueryRowxContext
+		selectFunc = tx.SelectContext
 	}
 
 	err := retrier.WithRetry(p.maxRetries, func() error {
-		var err = selectFunc(ctx, query, args...).StructScan(dst)
+		var err = selectFunc(ctx, dst, query, args...)
 		return p.markUnretriable(err)
 	})
 	return err
