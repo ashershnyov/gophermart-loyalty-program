@@ -28,10 +28,10 @@ func (s *Storage) Withdraw(ctx context.Context, userID int64, orderID string, am
 	if err != nil {
 		return fmt.Errorf(errWithdrawing, err)
 	}
+	defer tx.Rollback()
 
 	_, err = tx.ExecContext(ctx, qWithdrawFromBalance, amount, userID)
 	if err != nil {
-		tx.Rollback()
 		return fmt.Errorf(errWithdrawing, err)
 	}
 

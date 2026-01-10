@@ -32,7 +32,9 @@ type Poller struct {
 
 // New creates a new poller.
 func New(os orderService, bs balanceService, address string) (*Poller, error) {
-	cfg, err := NewConfig(address)
+	cfg, err := NewConfig(
+		SetAddress(address),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new poller: %w", err)
 	}
