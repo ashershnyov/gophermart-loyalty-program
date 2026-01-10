@@ -4,8 +4,8 @@ import "time"
 
 // IntBalanceInfo is a user's balance info.
 type IntBalanceInfo struct {
-	Current   float64
-	Withdrawn float64
+	Current   float64 `db:"current"`
+	Withdrawn float64 `db:"total_withdrawn"`
 }
 
 // ToExternal converts from internal data model to external.
@@ -18,9 +18,9 @@ func (bi *IntBalanceInfo) ToExternal() BalanceResp {
 
 // IntWithdrawal represents single withdrawal internally.
 type IntWithdrawal struct {
-	Created time.Time
-	OrderID string
-	Amount  float64
+	Created time.Time `db:"created"`
+	OrderID string    `db:"order_id"`
+	Amount  float64   `db:"amount"`
 }
 
 // ToExternal converts from internal data model to external.
