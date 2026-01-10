@@ -78,8 +78,7 @@ func (p *Postgres) QueryOneContext(ctx context.Context, dst any, query string, a
 	}
 
 	err := retrier.WithRetry(p.maxRetries, func() error {
-		var err error
-		err = selectFunc(ctx, query, args...).StructScan(dst)
+		var err = selectFunc(ctx, query, args...).StructScan(dst)
 		return p.markUnretriable(err)
 	})
 	return err
@@ -101,8 +100,7 @@ func (p *Postgres) QueryManyContext(ctx context.Context, dst any, query string, 
 	}
 
 	err := retrier.WithRetry(p.maxRetries, func() error {
-		var err error
-		err = selectFunc(ctx, dst, query, args...)
+		var err = selectFunc(ctx, dst, query, args...)
 		return p.markUnretriable(err)
 	})
 	return err
@@ -111,17 +109,21 @@ func (p *Postgres) QueryManyContext(ctx context.Context, dst any, query string, 
 // ExecContext executes the passed query. Would use the transcation if present in the context.
 func (p *Postgres) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	var (
-		r      sql.Result
-		err    error
-		tx, ok = ctx.Value(TxKey).(*sqlx.Tx)
+		r        sql.Result
+		err      error
+		tx, ok   = ctx.Value(TxKey).(*sqlx.Tx)
+		execFunc func(context.Context, string, ...any) (sql.Result, error)
 	)
+
+	if !ok || tx == nil {
+		execFunc = p.DB.ExecContext
+	} else {
+		execFunc = tx.ExecContext
+	}
+
 	err = retrier.WithRetry(p.maxRetries, func() error {
 		var err error
-		if !ok || tx == nil {
-			r, err = p.DB.ExecContext(ctx, query, args...)
-		} else {
-			r, err = tx.ExecContext(ctx, query, args...)
-		}
+		r, err = execFunc(ctx, query, args...)
 		return p.markUnretriable(err)
 	})
 

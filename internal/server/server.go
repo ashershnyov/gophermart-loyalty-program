@@ -86,8 +86,8 @@ func (s *server) Run() error {
 
 	service := loyalty.NewService(s.db, jwtProvider, s.config.AccrualAddress)
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	service.StartPolling(ctx)
+	_, cancelFunc := context.WithCancel(context.Background())
+	// service.StartPolling(ctx)
 
 	handler := loyalty.NewHandler(service, middleware.JWTAuth(jwtProvider))
 
